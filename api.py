@@ -1,6 +1,6 @@
 from google import genai
 from google.genai import types
-from google.genai.errors import ClientError
+from google.genai.errors import ClientError,ServerError
 import time
 from pathlib import Path
 class API_CALL:
@@ -15,9 +15,12 @@ class API_CALL:
         self.response_text_dict={}
         self.input_tokens=0
         self.output_tokens=0
+        self.rpm_limit=None
     def give_prompt(self,temp:str):
         self.prompt=temp
     def generate_response(self,print_status=True):
+        if isinstance(self.rpm_limit,int):
+            rpm_delay=60/self.rpm_limit
         if isinstance(self.pdf_dir, str):
             self.pdf_dir=Path(self.pdf_dir)
         for file in self.pdf_dir.glob("*.pdf"):
@@ -34,16 +37,16 @@ class API_CALL:
                         self.response_dict[file]=temp_response
                         self.response_text_dict[file]=temp_response.text
                         end=time.perf_counter()
+                        if isinstance(self.rpm_limit,int) and ((end-start)<rpm_delay):
+                            time.sleep(rpm_delay-(end-start))
+                        elapsed=time.perf_counter()-start
                         if(print_status):
-                            print(f"{end - start}s for {file}")
+                            print(f"{elapsed}s for {file}")
                         break
-                except ClientError as error:
-                    if "RESOURCE_EXHAUSTED" in str(error):
-                        print(f"Rate ceiling hit. Delaying by {delay} s for {file}.pdf...")
-                        time.sleep(delay)
-                        delay *= 2
-                    else:
-                        raise
+                except (ClientError, ServerError) as error:
+                    print(f"Rate ceiling hit. Delaying by {delay} s for {file}.pdf...")
+                    time.sleep(delay)
+                    delay *= 2
 
 
 

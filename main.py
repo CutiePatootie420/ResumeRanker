@@ -76,12 +76,15 @@ class Pipeline:
         self.data_handler.full_idf = {k: (math.log((1 + self.job.total_resumes) / (1 + v)) + 1) for k, v in self.data_handler.full_df.items()}
         self.data_handler.full_tf_idf = {k: self.vectorizer.file_tfidf(self.job.file_contents[k], self.job.total_resumes, self.data_handler.full_map) for k in self.data_handler.full_map.keys()}
         self.job.cosine_similarity={file: sum(self.job.job_tf_idf[k]*self.data_handler.full_tf_idf[file].get(k, 0) for k in self.job.job_tf_idf) / ((math.sqrt(sum(v * v for v in self.data_handler.full_tf_idf[file].values()))) * (math.sqrt(sum(v * v for v in self.job.job_tf_idf.values())))) for file in self.data_handler.full_tf_idf}
+    def set_rate_limits(self,limit):
+        self.api.rpm_limit=limit
     def run_pipeline(self,job_requirements,prompt):
         self.initialise_job(job_requirements)
         self.give_prompt(prompt)
+        self.set_rate_limits(14)
         self.get_response()
         self.make_maps_for_json()
-swe_pipeline=Pipeline(os.getenv("gemapikey"),Path.cwd(),"gemini-2.5-flash","resumes.json")
+swe_pipeline=Pipeline(os.getenv("gemapikey"),Path.cwd(),"gemini-3.1-flash-lite-preview","resumes.json")
 swe_requirements=["python java c++ javascript data structures algorithms backend development rest apis microservices sql postgresql mysql redis mongodb aws azure gcp docker kubernetes terraform ci cd github git system design distributed systems testing unit integration scalability performance optimization"]
 swe_pipeline.run_pipeline(swe_requirements,prompt)
 
