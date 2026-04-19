@@ -51,14 +51,14 @@ As an initial engineering release, the system carries the following constraints:
 
 ### V. INITIALIZATION COMMANDS
 
-**01 // THE ENGINE [BACKEND]**
+**01 // [BACKEND]**
 ```bash
 cd backend && npm install
-python pipeline_worker.py
-node server.js
+export gemapikey="YOUR_KEY_HERE"
+python3 main.py & node server.js
 ```
 
-**02 // THE COCKPIT [FRONTEND]**
+**02 // [FRONTEND]**
 ```bash
 cd frontend && npm install
 npm run dev
